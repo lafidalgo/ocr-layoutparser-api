@@ -6,3 +6,4 @@ python-multipart==0.0.6
 opencv-python
 layoutparser
 layoutparser[ocr]
+Pillow==9.5.0
