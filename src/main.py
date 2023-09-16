@@ -13,6 +13,7 @@ app = FastAPI()
 
 class Params(BaseModel):
     lang: Optional[str] = "eng"
+    feature_type: Optional[str] = "LINE"
 
 @app.get("/")
 def home():
@@ -55,12 +56,25 @@ async def submit(params: Params = Depends(), files: List[UploadFile] = File(...)
         # Run Layout Parser with Tesseract
         res = ocr_agent.detect(image, return_response=True)
 
-        layout_tesseract  = ocr_agent.gather_data(res, agg_level=lp.TesseractFeatureType.LINE)
+        if params.feature_type == "PAGE":
+            agg_level = lp.TesseractFeatureType.PAGE
+        elif params.feature_type == "BLOCK":
+            agg_level = lp.TesseractFeatureType.BLOCK
+        elif params.feature_type == "PARA":
+            agg_level = lp.TesseractFeatureType.PARA
+        elif params.feature_type == "LINE":
+            agg_level = lp.TesseractFeatureType.LINE
+        elif params.feature_type == "WORD":
+            agg_level = lp.TesseractFeatureType.WORD
+
+        layout_tesseract  = ocr_agent.gather_data(res, agg_level=agg_level)
 
         # Create dict with id and text
         layout_tesseract_text_id = {}
+        full_text = ""
         for index, text in enumerate(layout_tesseract.get_texts()):
             layout_tesseract_text_id[layout_tesseract.get_info('id')[index]] = text
+            full_text += text + "\n"
         
         # Draw text of detected layout 
         layout_tesseract_image = lp.draw_box(image, layout_tesseract, box_width=3, show_element_id=True)
@@ -70,7 +84,7 @@ async def submit(params: Params = Depends(), files: List[UploadFile] = File(...)
         final_image_base64 = base64.b64encode(image_data)
 
         results[file.filename] = {}
-        results[file.filename]['ocr'] = layout_tesseract_text_id
+        results[file.filename]['ocr'] = full_text
         results[file.filename]['final_image_base64'] = final_image_base64
 
     return {"results": results,
