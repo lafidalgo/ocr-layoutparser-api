@@ -28,6 +28,8 @@ async def submit(params: Params = Depends(), files: List[UploadFile] = File(...)
     for file in files:
         # Read the image file as bytes
         img_data = await file.read()
+        nparr = np.frombuffer(img_data, np.uint8)
+        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
         # Convert the image bytes to a PIL Image
         img = Image.open(BytesIO(img_data))
@@ -51,7 +53,7 @@ async def submit(params: Params = Depends(), files: List[UploadFile] = File(...)
         img_cv2 = cv2.resize(img_cv2, (0, 0), fx=0.5, fy=0.5)
 
         # Run Layout Parser with Tesseract
-        res = ocr_agent.detect(img_cv2, return_response=True)
+        res = ocr_agent.detect(image, return_response=True)
 
         layout_tesseract  = ocr_agent.gather_data(res, agg_level=lp.TesseractFeatureType.LINE)
 
@@ -61,7 +63,7 @@ async def submit(params: Params = Depends(), files: List[UploadFile] = File(...)
             layout_tesseract_text_id[layout_tesseract.get_info('id')[index]] = text
         
         # Draw text of detected layout 
-        layout_tesseract_image = lp.draw_box(img_cv2, layout_tesseract, box_width=3, show_element_id=True)
+        layout_tesseract_image = lp.draw_box(image, layout_tesseract, box_width=3, show_element_id=True)
        
         _, img_bytes = cv2.imencode('.jpg', layout_tesseract_image)
         final_image_base64 = base64.b64encode(img_bytes).decode('utf-8')
