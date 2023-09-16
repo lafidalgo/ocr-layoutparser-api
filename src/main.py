@@ -29,8 +29,6 @@ async def submit(params: Params = Depends(), files: List[UploadFile] = File(...)
     for file in files:
         # Read the image file as bytes
         img_data = await file.read()
-        nparr = np.frombuffer(img_data, np.uint8)
-        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
         # Convert the image bytes to a PIL Image
         img = Image.open(BytesIO(img_data))
@@ -52,6 +50,9 @@ async def submit(params: Params = Depends(), files: List[UploadFile] = File(...)
 
         # Down-sample
         img_cv2 = cv2.resize(img_cv2, (0, 0), fx=0.5, fy=0.5)
+
+        # Convert the image to be used in ocr_agent.detect
+        image = lp.LayoutOCRImage.from_image(img_cv2)
 
         # Run Layout Parser with Tesseract
         res = ocr_agent.detect(image, return_response=True)
