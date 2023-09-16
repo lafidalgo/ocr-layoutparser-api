@@ -51,11 +51,8 @@ async def submit(params: Params = Depends(), files: List[UploadFile] = File(...)
         # Down-sample
         img_cv2 = cv2.resize(img_cv2, (0, 0), fx=0.5, fy=0.5)
 
-        # Convert the image to be used in ocr_agent.detect
-        image = lp.LayoutOCRImage.from_image(img_cv2)
-
         # Run Layout Parser with Tesseract
-        res = ocr_agent.detect(image, return_response=True)
+        res = ocr_agent.detect(img_cv2, return_response=True)
 
         if params.feature_type == "PAGE":
             agg_level = lp.TesseractFeatureType.PAGE
@@ -78,7 +75,7 @@ async def submit(params: Params = Depends(), files: List[UploadFile] = File(...)
             full_text += text + "\n"
         
         # Draw text of detected layout 
-        layout_tesseract_image = lp.draw_box(image, layout_tesseract, box_width=3, show_element_id=True)
+        layout_tesseract_image = lp.draw_box(img_cv2, layout_tesseract, box_width=3, show_element_id=True)
         with BytesIO() as output_buffer:
             layout_tesseract_image.save(output_buffer, format="PNG")
             image_data = output_buffer.getvalue()
