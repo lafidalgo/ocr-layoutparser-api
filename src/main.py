@@ -12,11 +12,7 @@ import layoutparser as lp
 app = FastAPI()
 
 class Params(BaseModel):
-    output_type: Optional[str] = "string"
     lang: Optional[str] = "eng"
-    config: Optional[str] = "--psm 6"
-    nice: Optional[int] = 0 
-    timeout: Optional[int] = 0
 
 @app.get("/")
 def home():
@@ -27,7 +23,7 @@ async def submit(params: Params = Depends(), files: List[UploadFile] = File(...)
     results = {}
 
     # Tesseract OCR Agent
-    ocr_agent = lp.TesseractAgent(languages=params.languages)
+    ocr_agent = lp.TesseractAgent(languages=params.lang)
 
     for file in files:
         # Read the image file as bytes
