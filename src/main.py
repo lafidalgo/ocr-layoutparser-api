@@ -73,9 +73,9 @@ async def submit(params: Params = Depends(), files: List[UploadFile] = File(...)
             full_text += text + "\n"
         
         # Draw text of detected layout 
-        layout_tesseract_image = lp.draw_box(img_cv2, layout_tesseract, box_width=3, show_element_id=True)
+        #layout_tesseract_image = lp.draw_box(img_cv2, layout_tesseract, box_width=3, show_element_id=True)
         with BytesIO() as output_buffer:
-            layout_tesseract_image.save(output_buffer, format="PNG")
+            img_cv2.save(output_buffer, format="PNG")
             image_data = output_buffer.getvalue()
         final_image_base64 = base64.b64encode(image_data)
 
