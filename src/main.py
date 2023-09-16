@@ -80,7 +80,9 @@ async def submit(params: Params = Depends(), files: List[UploadFile] = File(...)
             image_data = output_buffer.getvalue()
         final_image_base64 = base64.b64encode(image_data)
         """
-        _, img_bytes = cv2.imencode('.jpg', img_cv2)
+        layout_tesseract_image = lp.draw_box(img_cv2, layout_tesseract, box_width=3, show_element_id=True)
+        print("layout_tesseract_image", layout_tesseract_image.shape)
+        _, img_bytes = cv2.imencode('.jpg', layout_tesseract_image)
         final_image_base64 = base64.b64encode(img_bytes).decode('utf-8')
 
         results[file.filename] = {}
