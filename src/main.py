@@ -19,7 +19,7 @@ class Params(BaseModel):
 
 @app.get("/")
 def home():
-    return "OCR Pytesseract with FastAPI - Version 1.0"
+    return "OCR Layout Parser with FastAPI - Version 1.0"
 
 @app.post("/ocr/")
 async def submit(params: Params = Depends(), files: List[UploadFile] = File(...)):
