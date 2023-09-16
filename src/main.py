@@ -7,6 +7,7 @@ import numpy as np
 from io import BytesIO
 import cv2
 import base64
+import layoutparser as lp
 
 app = FastAPI()
 
@@ -24,6 +25,9 @@ def home():
 @app.post("/ocr/")
 async def submit(params: Params = Depends(), files: List[UploadFile] = File(...)):
     results = {}
+
+    # Tesseract OCR Agent
+    ocr_agent = lp.TesseractAgent(languages=params.languages)
 
     for file in files:
         # Read the image file as bytes
@@ -50,18 +54,24 @@ async def submit(params: Params = Depends(), files: List[UploadFile] = File(...)
         # Down-sample
         img_cv2 = cv2.resize(img_cv2, (0, 0), fx=0.5, fy=0.5)
 
-        # Apply tesseract
-        ocr = pytesseract.image_to_string(img_cv2, lang=params.lang,
-                                        config=params.config,
-                                        output_type=params.output_type,
-                                        nice=params.nice,
-                                        timeout=params.timeout)
+        # Run Layout Parser with Tesseract
+        res = ocr_agent.detect(img_cv2, return_response=True)
+
+        layout_tesseract  = ocr_agent.gather_data(res, agg_level=lp.TesseractFeatureType.LINE)
+
+        # Create dict with id and text
+        layout_tesseract_text_id = {}
+        for index, text in enumerate(layout_tesseract.get_texts()):
+            layout_tesseract_text_id[layout_tesseract.get_info('id')[index]] = text
         
-        _, img_bytes = cv2.imencode('.jpg', img_cv2)
+        # Draw text of detected layout 
+        layout_tesseract_image = lp.draw_box(img_cv2, layout_tesseract, box_width=3, show_element_id=True)
+       
+        _, img_bytes = cv2.imencode('.jpg', layout_tesseract_image)
         final_image_base64 = base64.b64encode(img_bytes).decode('utf-8')
 
         results[file.filename] = {}
-        results[file.filename]['ocr'] = ocr
+        results[file.filename]['ocr'] = layout_tesseract_text_id
         results[file.filename]['final_image_base64'] = final_image_base64
 
     return {"results": results,
