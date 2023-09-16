@@ -80,7 +80,8 @@ async def submit(params: Params = Depends(), files: List[UploadFile] = File(...)
             image_data = output_buffer.getvalue()
         final_image_base64 = base64.b64encode(image_data)
         """
-        final_image_base64 = ""
+        _, img_bytes = cv2.imencode('.jpg', img_cv2)
+        final_image_base64 = base64.b64encode(img_bytes).decode('utf-8')
 
         results[file.filename] = {}
         results[file.filename]['ocr'] = full_text
