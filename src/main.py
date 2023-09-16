@@ -84,9 +84,11 @@ async def submit(params: Params = Depends(), files: List[UploadFile] = File(...)
         img_pil = Image.fromarray(img_cv2)
         
         layout_tesseract_image = lp.draw_box(img_pil, layout_tesseract, box_width=3, show_element_id=True)
-        print("layout_tesseract_image OK")
-        _, img_bytes = cv2.imencode('.jpg', layout_tesseract_image)
-        final_image_base64 = base64.b64encode(img_bytes).decode('utf-8')
+        print("layout_tesseract_image OK", type(layout_tesseract_image))
+        with BytesIO() as output_buffer:
+            layout_tesseract_image.save(output_buffer, format="PNG")
+            image_data = output_buffer.getvalue()
+        final_image_base64 = base64.b64encode(image_data)
 
         results[file.filename] = {}
         results[file.filename]['ocr'] = full_text
