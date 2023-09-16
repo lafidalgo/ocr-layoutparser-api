@@ -30,11 +30,9 @@ async def submit(params: Params = Depends(), files: List[UploadFile] = File(...)
         # Read the image file as bytes
         img_data = await file.read()
 
-        # Convert the image bytes to a PIL Image
-        img = Image.open(BytesIO(img_data))
-
-        # Convert the PIL Image to an OpenCV image (numpy array)
-        img_cv2 = np.array(img)
+        # Use cv2.imdecode to convert the image data to a numpy array
+        nparr = np.frombuffer(img_data, np.uint8)
+        img_cv2 = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
         # Convert the image to grayscale (1 channel)
         if len(img_cv2.shape) >= 3:
